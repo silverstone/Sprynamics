@@ -5,6 +5,7 @@ import { Component, HostBinding, HostListener, OnInit, ViewChild } from "@angula
 import { MatSidenav } from "@angular/material/sidenav"
 import { Router } from "@angular/router"
 import { AuthService } from "./core/auth.service"
+import { Select } from "@ngxs/store";
 
 declare const $
 
@@ -28,6 +29,7 @@ export class AppComponent implements OnInit {
   private sideBySideWidth = 992
 
   @ViewChild(MatSidenav) sidenav: MatSidenav
+  @Select(state => state.app) appState;
 
   get isOpened() {
     return this.isSideBySide && this.ns.isSideNavDash

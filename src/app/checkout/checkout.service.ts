@@ -105,6 +105,7 @@ export class CheckoutService {
               }
             };
             this.updateOrder(payload)
+            this.store.dispatch(new SetUser(user));
             this.setUser(user).then(_ => {
               this.initialized = true
               resolve()
@@ -116,7 +117,7 @@ export class CheckoutService {
   }
 
   setUser(user) {
-    this.store.dispatch(new SetUser(user));
+    //this.store.dispatch(new SetUser(user));
     return new Promise((resolve, reject) => {
       this.updateOrder({ userId: user.uid })
       if (user.braintreeId) {

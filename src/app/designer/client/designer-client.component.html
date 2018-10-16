@@ -1,127 +1,82 @@
-<div class="pusher"></div>
-<div *ngIf="loadingPdf" class="loading-pdf-overlay">
-  <div style="width: 50%">
-    <mat-progress-bar [mode]="loadingMessage === 'Uploading finished design...' ? 'determinate' : 'query'" [value]="loadingProgress"></mat-progress-bar>
-    <div class="loading-message">
-      {{ loadingMessage || '' }}
-    </div>
-  </div>
+<div class="checkout-popup" [class.hidden]="!checkingOut">
+  <router-outlet></router-outlet>
 </div>
-<div class="back">
-  <div style="flex-basis: 430px">
-    <!-- <button mat-icon-button routerLink="/products" [queryParams]="{product: productSizes[size]?.product}"> -->
-    <button mat-icon-button routerLink="/products">
-      <mat-icon>arrow_back</mat-icon>
-    </button>
-  </div>
-  <div style="flex: 1">
-    <button mat-icon-button matTooltip="undo" (click)="undo()" [disabled]="past.length === 0">
-      <mat-icon>undo</mat-icon>
-    </button>
-    <button mat-icon-button matTooltip="redo" (click)="redo()" [disabled]="future.length === 0">
-      <mat-icon>redo</mat-icon>
-    </button>
-    <button class="btn" [class.green]="viewSide === 'front'" (click)="changeViewSide('front')">
-      Front
-    </button>
-    <button class="btn" [class.green]="viewSide === 'back'" (click)="changeViewSide('back')">
-      Back
-    </button>
-  </div>
-  <div>
-    <button class="btn green" (click)="saveAndContinue()">
-      Save and Continue
-    </button>
-  </div>
-</div>
-<div class="main-container">
+<div class="checkout-background" [class.hidden]="!checkingOut"></div>
 
-  <div class="design-container">
-
-    <!-- Tabs -->
-    <span class="selected-tab" [style.transform]="'translateY(' + (210 + currentTabIndex*70) + 'px)'">
-      <span></span>
-      <span class="bottom"></span>
-    </span>
-    <div class="side-nav">
-      <div class="tab" [class.selected]="currentTab === 'agent'" (click)="currentTab = 'agent'; currentTabIndex = 0;">
-        <mat-icon>contact_mail</mat-icon>
-        <div class="tab-title"> Agent </div>
-      </div>
-      <div class="tab" [class.selected]="currentTab === 'designs'" (click)="currentTab = 'designs'; currentTabIndex = 1;">
-        <mat-icon>view_carousel</mat-icon>
-        <div class="tab-title"> Designs </div>
-      </div>
-      <ng-container *ngIf="template">
-        <div class="tab" [class.selected]="currentTab === 'property'" (click)="currentTab = 'property'; currentTabIndex = 2;">
-          <mat-icon>home</mat-icon>
-          <div class="tab-title"> Property </div>
-        </div>
-        <div class="tab" [class.selected]="currentTab === 'text'" (click)="currentTab = 'text'; currentTabIndex = 3;">
-          <mat-icon>subject</mat-icon>
-          <div class="tab-title"> Text </div>
-        </div>
-        <div class="tab" [class.selected]="currentTab === 'colors'" (click)="currentTab = 'colors'; currentTabIndex = 4;">
-          <mat-icon>color_lens</mat-icon>
-          <div class="tab-title"> Colors </div>
-        </div>
-      </ng-container>
-    </div>
-    
-    <!-- Selected tab content -->
-    <div class="form-container">
-
-      <app-designs 
-        [hidden]="currentTab !== 'designs'"
-        [size]="size"
-        (select)="loadDesign($event)">
+<app-designer-view [loading]="loading">
+  <ng-container sidebar>
+    <!-- BEGIN sidebar tabs -->
+    <app-sidebar-tab title="Agents"
+                     icon="contact_mail"
+                     [disabled]="!selectedProduct || !designState.canvasData">
+      <app-agents [user]="selectedAgent"
+                  [agents]="agents"
+                  [loading]="loading"
+                  (changeAgent)="changeAgent($event)"
+                  [(selectedAgent)]="selectedAgent">
+      </app-agents>
+    </app-sidebar-tab>
+    <app-sidebar-tab title="Products"
+                     icon="aspect_ratio">
+      <app-products (changeProduct)="changeProduct($event)"
+                    [selectedProduct]="selectedProduct"></app-products>
+    </app-sidebar-tab>
+    <app-sidebar-tab #designsTab
+                     title="Designs"
+                     icon="view_carousel"
+                     [disabled]="!selectedProduct">
+      <app-designs [size]="'9x6'"
+                   (select)="loadDesign($event)">
       </app-designs>
+    </app-sidebar-tab>
+    <app-sidebar-tab title="Property"
+                     icon="home"
+                     [disabled]="!selectedProduct || !designState.canvasData">
+      <app-property [agent]="selectedAgent"
+                    [listingId]="listingId"
+                    [(selectedListing)]="selectedListing"
+                    (changeProperty)="changeProperty($event)">
+      </app-property>
+    </app-sidebar-tab>
+    <app-sidebar-tab title="Text"
+                     icon="subject"
+                     [disabled]="!selectedProduct || !designState.canvasData">
+      <app-text [formFields]="designState.textFields"
+                (render)="fabricCanvas.render()"></app-text>
+    </app-sidebar-tab>
+    <app-sidebar-tab title="Colors"
+                     icon="color_lens"
+                     [disabled]="!selectedProduct || !designState.canvasData">
+      <app-colors *ngIf="orderState.brandColors"
+                  [(colors)]="orderState.brandColors">
+      </app-colors>
+    </app-sidebar-tab>
+    <!-- END sidebar tabs -->
+  </ng-container>
 
-      <app-text 
-        [hidden]="currentTab !== 'text'" 
-        [formFields]="textFields" 
-        (change)="saveUndo()" 
-        (render)="canvas.renderAll()">
-      </app-text>
-
-      <ng-container *ngIf="!loading && template && selectedAgent">
-
-        <app-property 
-          [hidden]="currentTab !== 'property'" 
-          [agent]="selectedAgent" 
-          [listingId]="listingId"
-          [(selectedListing)]="selectedListing"
-          (changeProperty)="changeAddress($event)">
-        </app-property>
-        
-        <app-colors 
-          [hidden]="currentTab !== 'colors'" 
-          [colors]="template.brandColors"
-          (colorChange)="changeColor($event)" 
-          (change)="saveUndo()">
-        </app-colors>
-        
-        <app-agents 
-          [hidden]="currentTab !== 'agent'" 
-          [user]="userData" 
-          [agents]="agents" 
-          [loading]="loadingAgents"
-          (changeAgent)="changeAgent($event)" 
-          [(selectedAgent)]="selectedAgent">
-        </app-agents>
-
-      </ng-container>
-
+  <ng-container designer>
+    <div class="designer-view-options">
+      <button id="front"
+              class="btn"
+              [class.active]="viewSide === 'front'"
+              (click)="setViewSide('front')"
+              [disabled]="!selectedProduct || !designState.canvasData || processing">View Front</button>
+      <button id="back"
+              class="btn"
+              [class.active]="viewSide === 'back'"
+              (click)="setViewSide('back')"
+              [disabled]="!selectedProduct || !designState.canvasData || processing">View Back</button>
     </div>
-
-    <div #designerView class="designer-view">
-      <div class="loading-overlay" *ngIf="loading">
-        <mat-spinner></mat-spinner>
-      </div>
-      <div [hidden]="loading" (contextmenu)="$event.preventDefault()">
-        <canvas id="canvas" class="designer-canvas"></canvas>
-      </div>
+    <!-- canvas -->
+    <app-fabric-canvas #canvas
+                       [loading]="processing"
+                       (click)="clickObject($event)"></app-fabric-canvas>
+    <div class="designer-view-save">
+      <button id="save"
+              class="btn btn-green"
+              [disabled]="!selectedProduct || !designState.canvasData || processing"
+              (click)="saveAndContinue()">Save and Continue</button>
     </div>
-  </div>
+  </ng-container>
 
-</div>
+</app-designer-view>

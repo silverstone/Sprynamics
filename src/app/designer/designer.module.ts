@@ -8,7 +8,7 @@ import { RouterModule, Routes } from '@angular/router'
 import { AdminDesignerProgressDialog } from './admin/admin-designer-progress-dialog/admin-designer-progress.dialog'
 import { AlignmentService } from './admin/alignment.service'
 import { DesignerAdminComponent } from './admin/designer-admin.component'
-import { DesignerDevComponent } from './dev/designer-dev.component'
+import { DesignerClientComponent } from './client/designer-client.component'
 import { ImageSelectDialog } from './image-select-dialog/image-select.dialog'
 import { ObjectFactoryService } from './object-factory.service'
 import { AgentsComponent } from './sidebar/agents/agents.component'
@@ -20,7 +20,7 @@ import { TextComponent } from './sidebar/text/text.component'
 const routes: Routes = [
   {
     path: '',
-    component: DesignerDevComponent,
+    component: DesignerClientComponent,
     children: [
       {
         path: 'checkout',
@@ -41,7 +41,7 @@ const routes: Routes = [
     TextComponent,
     ImageSelectDialog,
     AdminDesignerProgressDialog,
-    DesignerDevComponent,
+    DesignerClientComponent,
     ProductsComponent,
     DesignerViewComponent,
     FabricCanvasComponent,
